@@ -12,6 +12,8 @@
 #define N_SAMPLES ((60*60*24*365*5)/60)
 // start of 2026
 #define SAMPLE_BEGIN 1767243600
+// vernal equinox for testing purposes
+// #define SAMPLE_BEGIN 1774032360
 
 SpiceChar failmsg[1841];
 
