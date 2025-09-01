@@ -29,20 +29,26 @@ void checkfail(void)
 
 int main(int argc, char** argv)
 {
-    int i;
+    int i, j;
 
     clock_t start, stop;
     time_t t;
     struct tm *tinfo;
     char tstr[64];
-    SpiceDouble tspice;
+    SpiceDouble tspice, state[6], lt;
     int percentinc;
+    FILE *ptr;
 
-    if(argc != 3)
+    printf("\n============ sunvec ============\n\n");
+
+    if(argc != 4)
     {
-        printf("usage: sunvec <tls> <bsp>\n");
+        printf("usage: sunvec <tls> <bsp> <output>\n");
         return 1;
     }
+
+    printf("---- file loading ----\n\n");
+    start = clock();
 
     if(access(argv[1], F_OK))
     {
@@ -52,16 +58,18 @@ int main(int argc, char** argv)
 
     if(access(argv[2], F_OK))
     {
-        printf("inaccessible tls file \"%s\"!\n", argv[1]);
+        printf("inaccessible bsp file \"%s\"!\n", argv[1]);
         return 1;
     }
 
     furnsh_c(argv[1]);
+    furnsh_c(argv[2]);
     checkfail();
 
-    printf("generating vectors...");
-    fflush(stdout);
+    stop = clock();
+    printf("files loaded in %.3f seconds.\n\n", (double) (stop - start) / CLOCKS_PER_SEC);
 
+    printf("---- vector generation ----\n");
     start = clock();
 
     percentinc = N_SAMPLES / 100;
@@ -71,6 +79,13 @@ int main(int argc, char** argv)
         tinfo = gmtime(&t);
         strftime(tstr, sizeof(tstr), "%Y-%m-%d %H:%M:%S UTC", tinfo);
         str2et_c(tstr, &tspice);
+        checkfail();
+
+        spkezr_c("SUN", tspice, "J2000", "LT+S", "EARTH", state, &lt);
+        checkfail();
+
+        for(j=0; j<3; j++)
+            samples[i][j] = state[j];
 
         if(i && !(i % percentinc))
             printf(".");
@@ -84,7 +99,41 @@ int main(int argc, char** argv)
     printf("\n");
 
     stop = clock();
-    printf("vectors generated in %.3f seconds.\n", (double) (stop - start) / CLOCKS_PER_SEC);
+    printf("vectors generated in %.3f seconds.\n\n", (double) (stop - start) / CLOCKS_PER_SEC);
+
+    unload_c(argv[2]);
+    unload_c(argv[1]);
+
+    printf("---- vector writing ----\n");
+    start = clock();
+
+    ptr = fopen(argv[3], "wb");
+    if(!ptr)
+    {
+        printf("couldn't open file for writing \"%s\"!\n", argv[3]);
+        return 1;
+    }
+
+    for(i=0; i<N_SAMPLES; i++)
+    {
+        for(j=0; j<3; j++)
+            fwrite(&samples[i][j], sizeof(float), 1, ptr);
+
+        if(i && !(i % percentinc))
+            printf(".");
+
+        if(!(i % (percentinc * 10)))
+            printf("\n%d / %d (%d%%) ", i, N_SAMPLES, i * 100 / N_SAMPLES);
+
+        fflush(stdout);
+    }
+
+    printf("\n");
+
+    fclose(ptr);
+
+    stop = clock();
+    printf("vectors written in %.3f seconds.\n", (double) (stop - start) / CLOCKS_PER_SEC);
     
     return 0;
 }
