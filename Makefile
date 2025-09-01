@@ -20,9 +20,14 @@ SUNVEC_SRC = $(wildcard $(SUNVEC_DIR)/*.c)
 SUNVEC_OBJ = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(SUNVEC_SRC)))
 SUNVEC_BIN = $(BIN_DIR)/sunvec
 
-.PHONY: all common sunvec cspice clean mkdirs
+VECINFO_DIR = vecinfo
+VECINFO_SRC = $(wildcard $(VECINFO_DIR)/*.c)
+VECINFO_OBJ = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(VECINFO_SRC)))
+VECINFO_BIN = $(BIN_DIR)/vecinfo
 
-all: common sunvec
+.PHONY: all common sunvec cspice vecinfo clean mkdirs
+
+all: common cspice sunvec vecinfo
 
 clean:
 	rm -rf $(BIN_DIR)
@@ -33,6 +38,8 @@ common: $(COM_OBJ)
 cspice: $(CSPICE_OBJ)
 
 sunvec: common cspice $(SUNVEC_BIN)
+
+vecinfo: common $(VECINFO_BIN)
 
 $(OBJ_DIR)/$(COM_DIR)/%.c.o: $(COM_DIR)/%.c
 	@mkdir -p $(OBJ_DIR)
@@ -53,3 +60,12 @@ $(OBJ_DIR)/$(SUNVEC_DIR)/%.c.o: $(SUNVEC_DIR)/%.c
 $(SUNVEC_BIN): $(SUNVEC_OBJ)
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(LDFLAGS) $(COM_OBJ) $(CSPICE_OBJ) $(SUNVEC_OBJ) -o $(SUNVEC_BIN)
+
+$(OBJ_DIR)/$(VECINFO_DIR)/%.c.o: $(VECINFO_DIR)/%.c
+	@mkdir -p $(OBJ_DIR)
+	@mkdir -p $(OBJ_DIR)/$(VECINFO_DIR)
+	$(CC) $(CFLAGS) -I$(COM_DIR) -c $< -o $@
+
+$(VECINFO_BIN): $(VECINFO_OBJ)
+	@mkdir -p $(BIN_DIR)
+	$(CC) $(LDFLAGS) $(COM_OBJ) $(VECINFO_OBJ) -o $(VECINFO_BIN)
