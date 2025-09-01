@@ -48,8 +48,8 @@ $(OBJ_DIR)/$(CSPICE_SRC_DIR)/%.c.o: $(CSPICE_SRC_DIR)/%.c
 $(OBJ_DIR)/$(SUNVEC_DIR)/%.c.o: $(SUNVEC_DIR)/%.c
 	@mkdir -p $(OBJ_DIR)
 	@mkdir -p $(OBJ_DIR)/$(SUNVEC_DIR)
-	$(CC) $(CFLAGS) -I$(CSPICE_INC_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -I$(COM_DIR) -I$(CSPICE_INC_DIR) -c $< -o $@
 
 $(SUNVEC_BIN): $(SUNVEC_OBJ)
 	@mkdir -p $(BIN_DIR)
-	$(CC) $(LDFLAGS) $(CSPICE_OBJ) $(SUNVEC_OBJ) -o $(SUNVEC_BIN)
+	$(CC) $(LDFLAGS) $(COM_OBJ) $(CSPICE_OBJ) $(SUNVEC_OBJ) -o $(SUNVEC_BIN)
