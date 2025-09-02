@@ -5,6 +5,44 @@
 
 #include "common.h"
 
+void cbincmd(FILE* ptr, int argc, char** argv)
+{
+    int i;
+
+    FILE *outptr;
+    uint64_t len;
+    char byte;
+
+    if(argc != 4)
+    {
+        printf("unrecognized arguments for cmd.\n");
+        exit(1);
+    }
+
+    outptr = fopen(argv[3], "w");
+    if(!outptr)
+    {
+        printf("couldn't open file for writing \"%s\"!\n", argv[3]);
+        exit(1);
+    }
+
+    fseek(ptr, 0, SEEK_END);
+    len = ftell(ptr);
+    fseek(ptr, 0, SEEK_SET);
+
+    fprintf(outptr, "char %s[] =\n{\n", argv[1]);
+
+    for(i=0; i<len; i++)
+    {
+        fread(&byte, 1, 1, ptr);
+        fprintf(outptr, "%hhd,", byte);
+    }
+
+    fprintf(outptr, "\n};\n");
+
+    fclose(outptr);
+}
+
 void veccmd(FILE* ptr, int argc, char** argv)
 {
     uint64_t len;
@@ -67,6 +105,9 @@ void printusage(void)
 
     printf("    vec <index>\n");
     printf("        print the vector at the given index\n");
+
+    printf("    cbin <outfile>\n");
+    printf("        put the binary into a c array of chars\n");
 }
 
 int main(int argc, char** argv)
@@ -92,6 +133,8 @@ int main(int argc, char** argv)
         sizecmd(ptr, argc, argv);
     else if(!strcmp(argv[2], "vec"))
         veccmd(ptr, argc, argv);
+    else if(!strcmp(argv[2], "cbin"))
+        cbincmd(ptr, argc, argv);
     else
     {
         printf("unknown command \"%s\".\n", argv[2]);

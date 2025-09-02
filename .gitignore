@@ -6,3 +6,4 @@ obj/
 
 *.bsp
 *.vec
+sunvecs.h
